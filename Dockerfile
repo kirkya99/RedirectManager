@@ -1,9 +1,8 @@
-# syntax=docker/dockerfile:1
 
 FROM node
 WORKDIR /app
 COPY . .
-RUN npm install express && npm install fs
+RUN npm install
 ENV BEARER_TOKEN=TOKEN
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
 EXPOSE 3000
