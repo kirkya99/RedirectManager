@@ -3,6 +3,7 @@ const fs = require('fs');
 const app = express();
 app.use(express.json());
 const token = 123456;
+let slugCounter = 0;
 
 // Middleware für Authentifizierung
 const authenticate = (req, res, next) => {
@@ -18,7 +19,9 @@ const authenticate = (req, res, next) => {
     next();
 };
 
-// Funktion zum Lesen der storage.json
+// Endpunkte
+
+// Soll alle Einträge aus der JSON‐Datei ausgebenn
 const readStorage = () => {
     return JSON.parse(fs.readFileSync('storage.json', 'utf8'));
 };
@@ -28,9 +31,10 @@ app.get('/entries', authenticate, (req, res) => {
     res.json(readStorage());
 });
 
-// Route zum Umleiten basierend auf dem Slug
+// Dieser Endpunkt soll dazu dienen, dass die slug zur entsprechenden
+// Domain aufgelöst und mittels express.redirect() umgeleitet wird
 app.get('/:slug', (req, res) => {
-    const { slug } = req.params;
+    const {slug} = req.params;
     const redirects = readStorage();
     const redirect = redirects.find(r => r.slug === slug);
     if (redirect) {
@@ -40,21 +44,25 @@ app.get('/:slug', (req, res) => {
     }
 });
 
-// Route zum Hinzufügen eines neuen Eintrags
+
+// Eine Url und Slug werden für das spätere weiterleiten abgespeichert
 app.post('/entry', (req, res) => {
-    const { slug, url } = req.body;
-    if (!slug || !url) {
-        return res.status(400).send('Missing slug or url');
+    let {slug, url} = req.body;
+    if (!slug) {
+        slug = "slug"+slugCounter++;
+    }
+    if (!url) {
+        return res.status(400).send('Missing url');
     }
     const redirects = readStorage();
-    redirects.push({ slug, url });
+    redirects.push({slug, url});
     fs.writeFileSync('storage.json', JSON.stringify(redirects));
     res.status(201).send('Entry added');
 });
 
-// Route zum Löschen eines Eintrags
+// Eintrag mit der gegebenen Slug aus der Datei entfernen
 app.delete('/entry/:slug', authenticate, (req, res) => {
-    const { slug } = req.params;
+    const {slug} = req.params;
     let redirects = readStorage();
     const redirectIndex = redirects.findIndex(r => r.slug === slug);
     if (redirectIndex > -1) {
