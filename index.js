@@ -14,8 +14,6 @@ function log(req, res, next) {
 }
 app.use(log);
 
-
-
 // Dieser Endpunkt soll dazu dienen, dass die slug zur entsprechenden
 // Domain aufgelöst und mittels express.redirect() umgeleitet wird
 app.get('/:slug', (req, res) => {
@@ -24,12 +22,17 @@ app.get('/:slug', (req, res) => {
 
 // Soll alle Einträge aus der JSON‐Datei ausgeben
 app.get('/entries', (req, res) => {
-    print(readStorage);
+    const entries = loadDataFromFile();
+    res.json(entries); 
 });
 
 // Eintrag mit der gegebenen Slug aus der Datei entfernen
 app.delete('/entry/:slug', (req, res) => {
-
+    const { slug } = req.params;
+    let entries = loadDataFromFile();
+    entries = entries.filter(entry => entry.slug !== slug);
+    saveDataToFile(entries);
+    res.json({ message: 'Entry deleted successfully' });
 });
 
 // Soll eine URL und eine Slug entgegennehmen zum Abspeichern für
@@ -43,5 +46,10 @@ app.post('/entry', (req, res) => {
 const readStorage = () => {
     return JSON.parse(fs.readFileSync('storage.json', 'utf8'));
 };
+
+// Funktion zum Speichern von Daten in die JSON-Datei
+function saveDataToFile(data) {
+    fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
+}
 
 app.listen(port, () => console.log(`Server listening on port ${port}!`));
