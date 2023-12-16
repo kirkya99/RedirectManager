@@ -1,10 +1,14 @@
 const express = require('express');
 const fs = require('fs');
 const app = express();
-app.use(express.json());
-const token = 123456;
+const token = process.env.BEARER_TOKEN || '123456';
+const PORT = process.env.PORT || 3000;
+const fileName = __dirname + '/storage.json';
+
 let slugCounter = 0;
-const fileName = __dirname+'/storage.json';
+
+app.use(express.json());
+
 
 // Middleware für Authentifizierung
 const authenticate = (req, res, next) => {
@@ -22,7 +26,7 @@ const authenticate = (req, res, next) => {
 
 // Endpunkte
 
-// Soll alle Einträge aus der JSON‐Datei ausgebenn
+// Soll alle Einträge aus der JSON‐Datei ausgeben
 const readStorage = () => {
     return JSON.parse(fs.readFileSync(fileName, 'utf8'));
 };
@@ -50,11 +54,15 @@ app.get('/:slug', (req, res) => {
 app.post('/entry', (req, res) => {
     let {slug, url} = req.body;
     if (!slug) {
-        slug = "slug"+slugCounter++;
+        slug = "slug" + slugCounter++;
     }
     if (!url) {
         return res.status(400).send('Missing url');
+
     }
+
+    // TODO: Überprüfung der URL, ob https:// oder http:// vorhanden ist
+    // if(url.substring(0, 8) !== "https://" || url.substring(0, 7) !== "http://")
     const redirects = readStorage();
     redirects.push({slug, url});
     fs.writeFileSync(fileName, JSON.stringify(redirects));
@@ -76,7 +84,6 @@ app.delete('/entry/:slug', authenticate, (req, res) => {
 });
 
 // Server starten
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server läuft auf Port ${PORT}`);
 });
