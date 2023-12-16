@@ -4,10 +4,11 @@ const app = express();
 app.use(express.json());
 const token = 123456;
 let slugCounter = 0;
+const fileName = __dirname+'/storage.json';
 
 // Middleware für Authentifizierung
 const authenticate = (req, res, next) => {
-    const bearerHeader = req.headers['authorization'];
+    const bearerHeader = req.headers['Authorization'];
     if (typeof bearerHeader !== 'undefined') {
 
         const bearer = bearerHeader.split(' ');
@@ -23,7 +24,7 @@ const authenticate = (req, res, next) => {
 
 // Soll alle Einträge aus der JSON‐Datei ausgebenn
 const readStorage = () => {
-    return JSON.parse(fs.readFileSync('storage.json', 'utf8'));
+    return JSON.parse(fs.readFileSync(fileName, 'utf8'));
 };
 
 // Route zum Anzeigen aller Einträge
@@ -56,7 +57,7 @@ app.post('/entry', (req, res) => {
     }
     const redirects = readStorage();
     redirects.push({slug, url});
-    fs.writeFileSync('storage.json', JSON.stringify(redirects));
+    fs.writeFileSync(fileName, JSON.stringify(redirects));
     res.status(201).send('Entry added');
 });
 
@@ -67,7 +68,7 @@ app.delete('/entry/:slug', authenticate, (req, res) => {
     const redirectIndex = redirects.findIndex(r => r.slug === slug);
     if (redirectIndex > -1) {
         redirects.splice(redirectIndex, 1);
-        fs.writeFileSync('storage.json', JSON.stringify(redirects));
+        fs.writeFileSync(fileName, JSON.stringify(redirects));
         res.send('Entry deleted');
     } else {
         res.status(404).send('Slug not found');
