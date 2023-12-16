@@ -4,5 +4,5 @@ WORKDIR /app
 COPY . .
 RUN npm install
 ENV BEARER_TOKEN=TOKEN
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
 EXPOSE 3000
